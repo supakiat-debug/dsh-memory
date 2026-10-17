@@ -1,0 +1,4 @@
+{
+  "title": "User Memory",
+  "description": "Learns preferences and tastes from chat history into USER.md / MEMORY.md and injects them into every session."
+}
