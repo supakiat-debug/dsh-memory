@@ -1,1 +1,19 @@
-node_modules
+# dependencies (the harness provides cordis / dsh-tools at runtime)
+node_modules/
+
+# packaging / logs
+npm-debug.log*
+yarn-error.log*
+*.log
+*.tgz
+
+# editors / OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# local secrets and scratch
+.env
+.env.*
+scratch/

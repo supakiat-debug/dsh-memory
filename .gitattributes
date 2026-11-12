@@ -1,0 +1,10 @@
+# Normalize line endings so a checkout on Linux/macOS gets the same bytes the
+# plugin was tested with (Node loads these files, and WSL tooling dislikes CRLF).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.gif binary
+*.ico binary
+*.woff binary
+*.woff2 binary

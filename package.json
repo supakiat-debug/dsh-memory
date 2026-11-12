@@ -1,8 +1,40 @@
 {
   "name": "dsh-memory",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
+  "description": "Budgeted user memory for DeepSeek Harness: USER.md / MEMORY.md injected as a session-frozen system-prompt block plus an append-only MEMORY UPDATE snapshot, so edits stop busting the prefix cache.",
+  "license": "MIT",
+  "author": {
+    "name": "supakiat-debug",
+    "email": "supakiat@gmail.com",
+    "url": "https://github.com/supakiat-debug"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/supakiat-debug/dsh-memory.git"
+  },
+  "homepage": "https://github.com/supakiat-debug/dsh-memory#readme",
+  "bugs": {
+    "url": "https://github.com/supakiat-debug/dsh-memory/issues"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "plugin",
+    "bundle",
+    "memory",
+    "user-profile",
+    "prompt-cache",
+    "llama-cpp"
+  ],
+  "engines": {
+    "node": ">=22.15.0"
+  },
   "type": "module",
+  "scripts": {
+    "test": "node --import ./test-register.mjs test-smoke.mjs"
+  },
   "exports": {
     ".": "./index.js",
     "./package.json": "./package.json",
@@ -10,7 +42,11 @@
   },
   "files": [
     "index.js",
-    "locale/*.json"
+    "locale/*.json",
+    "README.md",
+    "README.th.md",
+    "CHANGELOG.md",
+    "LICENSE"
   ],
   "meta": {
     "title": "User Memory",
