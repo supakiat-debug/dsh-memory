@@ -1,6 +1,6 @@
 # dsh-memory
 
-ปลั๊กอินเพิ่มความจำถาวรแบบมีงบให้ [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh) (`dsh`)
+ปลั๊กอินเพิ่มความจำถาวรแบบมีงบให้ [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`)
 เก็บโปรไฟล์ของ *คุณ* — ภาษา น้ำเสียง สไตล์ ข้อเท็จจริงของเครื่อง — ไว้ในไฟล์ Markdown สองไฟล์
 ส่งให้โมเดลทุก step และทำโดย **ไม่ทำให้ prefix cache พัง** ตอนที่มีการแก้ความจำ
 
@@ -146,10 +146,11 @@ DSH_MEMORY_TEST_HISTORY=1 npm test   # ให้ memory_history อ่าน log
 ```
 
 ชุดทดสอบเป็นแบบ hermetic: ตัวตรวจ `memory_history` ใช้ log session ปลอม (zstd) ที่สร้างใน temp
-directory จึงไม่อ่านบทสนทนาจริงของคุณ ยกเว้นจะตั้ง env var ข้างบน
+directory จึงไม่อ่านบทสนทนาจริงของคุณ ยกเว้นจะตั้ง env var ข้างบน ส่วน CI
+(`.github/workflows/ci.yml`) จะรันชุดเดียวกันนี้บน Node 22.15, 22.x และ 24.x ตาม lockfile ที่ commit ไว้
 
 smoke test รันปลั๊กอินกับ mock Cordis context มี ESM resolve hook เล็ก ๆ (`test-hooks.mjs` +
-`test-register.mjs`) ชิม peer dependency `@deepseek-ai/dsh-tools` ที่มาจาก harness จึงไม่ต้องแตะ
+`test-register.mjs`) จำลอง peer dependency `@deepseek-ai/dsh-tools` ที่มาจาก harness จึงไม่ต้องแตะ
 `node_modules` เลย ครอบคลุม: head frozen ไม่เปลี่ยนแม้ byte เดียว, snapshot มีแต่ delta,
 baseline แยกราย session, ไฟล์ว่าง, กันซ้ำ/เกิน limit, ทุก `injectMode`, โหมดแปลก ๆ ต้อง error เสียงดัง
 และ `{{…}}` ต้องไม่หลุดไปใน prompt ที่ render แล้ว

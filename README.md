@@ -1,6 +1,6 @@
 # dsh-memory
 
-Persistent, budgeted user memory for [DeepSeek Harness](https://www.npmjs.com/package/@deepseek-ai/dsh) (`dsh`).
+Persistent, budgeted user memory for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness) (`dsh`).
 It keeps a small profile of *you* — preferences, language, style, environment facts — in two plain
 Markdown files, hands it to the model on every step, and does it **without breaking the prompt
 prefix cache** when that profile changes.
@@ -172,7 +172,8 @@ DSH_MEMORY_TEST_HISTORY=1 npm test   # additionally exercise memory_history agai
 ```
 
 The suite is hermetic: `memory_history` is tested against a synthetic zstd session log created in a
-temp directory, so it never reads real conversations unless you opt in with the env var above.
+temp directory, so it never reads real conversations unless you opt in with the env var above. CI
+(`.github/workflows/ci.yml`) runs it on Node 22.15, 22.x and 24.x against the committed lockfile.
 
 The smoke test runs the plugin against a mock Cordis context. A tiny ESM resolve hook
 (`test-hooks.mjs` + `test-register.mjs`) stubs the harness-provided peer dependency
