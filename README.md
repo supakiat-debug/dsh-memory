@@ -66,8 +66,9 @@ Notes:
   the model never treats a stale head line as current.
 - Snapshots are grouped per store and per direction: `[USER PROFILE — added this session]`,
   `[AGENT NOTES — no longer current]`. Only lines that actually moved are listed.
-- If a session's total delta exceeds `deltaCharLimit`, it degrades to one line pointing the model at
-  `memory` action `read` instead of flooding history.
+- If a session's total delta exceeds `deltaCharLimit` — a whole-store `rewrite` does that on its own —
+  the snapshot carries the current full profile instead of a diff. A rewrite-sized diff is noise, and
+  pointing the model at `memory read` would cost the same text plus a round trip.
 - `injectProfile: false` still works and is an alias for `off`.
 - Learned text is never treated as a prompt template: the section registers with
   `interpolate: false` and every rendered block has `{{` broken apart, so a bullet containing
@@ -128,7 +129,7 @@ Set in `cordis.patch.yml` (or the profile's plugin config) under `user-memory`:
 | `memoryCharLimit` | `2200` | Character budget for `MEMORY.md` |
 | `injectMode` | `hybrid` | `hybrid` \| `section` \| `context` \| `off` |
 | `injectProfile` | `true` | Legacy kill switch; `false` = `off` |
-| `deltaCharLimit` | `1400` | Cap for one appended snapshot before it degrades to a pointer |
+| `deltaCharLimit` | `1400` | Snapshot size above which the diff is replaced by the current full profile |
 | `historyDefaultSessions` | `10` | Sessions read by `memory_history` unless overridden |
 | `historyMaxChars` | `60000` | Default digest size cap |
 
@@ -138,6 +139,7 @@ Set in `cordis.patch.yml` (or the profile's plugin config) under `user-memory`:
       name: dsh-memory
       config:
         injectMode: hybrid
+        memoryCharLimit: 3000
         deltaCharLimit: 1400
 ```
 
@@ -160,7 +162,7 @@ Set in `cordis.patch.yml` (or the profile's plugin config) under `user-memory`:
 | Event | Head re-prefill? | Appended tokens? |
 | --- | --- | --- |
 | Step with no memory change | No | 0 |
-| `memory` write during a session | No | delta only (≤ `deltaCharLimit`) |
+| `memory` write during a session | No | delta only (full profile if the delta is rewrite-sized) |
 | New session after edits | Yes, once (new baseline) | 0 |
 | `injectMode: section` + any write | Yes, every write | 0 |
 

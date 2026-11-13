@@ -58,7 +58,9 @@ session ที่ไม่แก้อะไรจึงใช้ **0 token** �
   โมเดลจึงไม่ยึดบรรทัดเก่าในหัวเป็นตัวปัจจุบัน
 - snapshot แยกตามไฟล์และทิศ: `[USER PROFILE — added this session]`, `[AGENT NOTES — no longer current]`
   แสดงเฉพาะบรรทัดที่เปลี่ยนจริง
-- ถ้า delta รวมของ session ยาวเกิน `deltaCharLimit` จะย่อเหลือบรรทัดเดียวที่บอกให้ไปเรียก `memory read`
+- ถ้า delta รวมของ session ยาวเกิน `deltaCharLimit` (แค่ `rewrite` ทั้งไฟล์ก็เกินแล้ว) snapshot จะส่ง
+  **ข้อความเต็มปัจจุบัน** แทน diff เพราะ diff ขนาด rewrite คือเสียงรบกวน และการบอกให้ไปเรียก
+  `memory read` ก็จ่ายข้อความเท่ากันอยู่ดี แค่เสีย round trip เพิ่ม
 - `injectProfile: false` ยังใช้ได้ และเท่ากับ `off`
 - ข้อความจากความจำไม่เคยถูกตีความเป็นแม่แบบ prompt: section ลงทะเบียนด้วย `interpolate: false`
   และทุก block ที่ render จะถูกแยก `{{` ออกจากกัน ทำให้ bullet ที่มี `{{example}}` ไม่ทำให้การประกอบ
@@ -114,7 +116,7 @@ session ที่ไม่แก้อะไรจึงใช้ **0 token** �
 | `memoryCharLimit` | `2200` | งบตัวอักษรของ `MEMORY.md` |
 | `injectMode` | `hybrid` | `hybrid` \| `section` \| `context` \| `off` |
 | `injectProfile` | `true` | สวิตช์เก่า `false` = `off` |
-| `deltaCharLimit` | `1400` | เพดาน snapshot หนึ่งอัน ก่อนย่อเป็นบรรทัดชี้ทาง |
+| `deltaCharLimit` | `1400` | ขนาด snapshot ที่เกินแล้วจะเปลี่ยนจาก diff เป็นส่งข้อความเต็มปัจจุบัน |
 | `historyDefaultSessions` | `10` | จำนวน session ที่ `memory_history` อ่านเมื่อไม่ระบุ |
 | `historyMaxChars` | `60000` | ขนาด digest เริ่มต้น |
 
@@ -134,7 +136,7 @@ session ที่ไม่แก้อะไรจึงใช้ **0 token** �
 | เหตุการณ์ | head ถูก re-prefill? | token ที่ append |
 | --- | --- | --- |
 | step ปกติ ไม่แก้ความจำ | ไม่ | 0 |
-| เขียน memory ระหว่าง session | ไม่ | เฉพาะ delta (≤ `deltaCharLimit`) |
+| เขียน memory ระหว่าง session | ไม่ | เฉพาะ delta (ถ้าใหญ่ระดับ rewrite จะส่งข้อความเต็ม) |
 | session ใหม่หลังแก้ไฟล์ | ใช่ ครั้งเดียว | 0 |
 | `injectMode: section` แล้วแก้ | ใช่ ทุกครั้งที่แก้ | 0 |
 

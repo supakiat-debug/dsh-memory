@@ -4,6 +4,16 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2026-11-12
+
+### Changed
+
+- An oversized snapshot no longer degrades to a pointer at `memory read`. A whole-store `rewrite`
+  produced a ~3.6k-char line diff, blew past `deltaCharLimit`, and left the model with a note telling
+  it to go read the profile — which costs the same text anyway, plus a round trip. The snapshot now
+  carries the current full profile (still append-only, still bounded by the store budgets) with a line
+  explaining that the diff was dropped.
+
 ## [0.2.0] - 2026-11-12
 
 ### Added

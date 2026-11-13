@@ -185,14 +185,23 @@ export function apply(ctx, config) {
   const blockFrom = (texts, frozen) => {
     if (!texts.user && !texts.memory) return '';
     const parts = frozen ? [...INTRO, FROZEN_NOTE] : [...INTRO];
-    for (const target of TARGETS) {
-      const body = texts[target];
-      if (!body) continue;
-      const pct = Math.min(100, Math.round((body.length / limits[target]) * 100));
-      parts.push(`\n=== ${LABELS[target]} [${pct}% — ${body.length}/${limits[target]} chars] ===\n${body}`);
-    }
+    parts.push(sectionsFrom(texts));
     return safe(parts.join('\n'));
   };
+
+  /**
+   * The per-store sections, without the intro that heads the frozen block.
+   * @param {{ user: string, memory: string }} texts - profile contents.
+   * @returns {string} one section per non-empty store, `''` when both are empty.
+   */
+  function sectionsFrom(texts) {
+    return TARGETS.map((target) => {
+      const body = texts[target];
+      if (!body) return '';
+      const pct = Math.min(100, Math.round((body.length / limits[target]) * 100));
+      return `\n=== ${LABELS[target]} [${pct}% — ${body.length}/${limits[target]} chars] ===\n${body}`;
+    }).filter(Boolean).join('\n');
+  }
 
   /** The live (unfrozen) profile block used by `section` and `context` modes. */
   const liveBlock = () => blockFrom(currentTexts(), false);
@@ -240,15 +249,20 @@ export function apply(ctx, config) {
     }
     if (!groups.length) return '';
     const body = groups.join('\n\n');
-    const capped = body.length > config.deltaCharLimit
-      ? `(profile changed by ${body.length} chars, over the ${config.deltaCharLimit}-char snapshot cap — `
-        + 'call the `memory` tool with action "read" for the current full text)'
-      : body;
-    return safe([
+    const header = [
       '=== MEMORY UPDATE (this session) ===',
       'These lines changed in the learned profile after the frozen profile block above. '
       + 'Where they conflict, THIS update wins; every other line of that block is still current.',
-      capped,
+    ];
+    if (body.length <= config.deltaCharLimit) return safe([...header, body].join('\n'));
+    // A whole-store rewrite touches nearly every line, so the diff is both huge and
+    // useless as a diff. Pointing at `memory read` would cost the same text plus a
+    // round trip, so send the current profile instead — it is budget-bounded anyway.
+    return safe([
+      ...header,
+      `(the diff is ${body.length} chars, over the ${config.deltaCharLimit}-char cap, `
+        + 'so this is the current full profile rather than a diff)',
+      sectionsFrom(now),
     ].join('\n'));
   };
 

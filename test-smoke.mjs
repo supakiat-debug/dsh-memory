@@ -114,12 +114,16 @@ assert.ok(headB.includes('ไม่ใช้ตาราง') && headB.includes(
 assert.notEqual(headB, head0, 'per-session baselines differ');
 assert.equal(h.snap(B), '', 'the new session has no delta of its own');
 
-// ---- oversized delta degrades to a pointer ----
+// ---- oversized delta falls back to the current full profile ----
 const big = harness({ deltaCharLimit: 60 });
 big.seed('user', '- alpha\n');
 big.head();
 await big.tools.memory.execute({ target: 'user', action: 'add', content: 'bravo charlie delta echo foxtrot golf hotel' });
-assert.ok(big.snap().includes('char snapshot cap'), 'oversized delta points at memory read');
+const bigSnap = big.snap();
+assert.ok(bigSnap.includes('rather than a diff'), 'oversized delta admits the diff was dropped');
+assert.ok(!bigSnap.includes('memory read'), 'oversized delta no longer sends the model off to read');
+assert.ok(bigSnap.includes('=== USER PROFILE') && bigSnap.includes('bravo charlie'), 'oversized delta carries the current profile');
+assert.ok(!bigSnap.includes('AGENT NOTES'), 'empty stores are not sectioned');
 
 // ---- legacy behaviours still enforced ----
 const r = await mem({ target: 'memory', action: 'add', content: 'เครื่อง Windows 11, workspace C:\\Users\\Supk' });
