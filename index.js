@@ -206,6 +206,39 @@ export function apply(ctx, config) {
   /** The live (unfrozen) profile block used by `section` and `context` modes. */
   const liveBlock = () => blockFrom(currentTexts(), false);
 
+  /**
+   * The current profile restated whole, for when the diff outgrew its budget.
+   *
+   * This used to travel under the delta header, whose promise is "every other line of
+   * that block is still current" — exactly backwards for a full profile, which means
+   * the opposite: what is NOT restated is gone. Cleared stores made it a disaster,
+   * because empty sections are skipped by `sectionsFrom`: a wipe arrived as a header
+   * claiming the old profile still stands, and the model kept acting on memories the
+   * user had just deleted. So the snapshot states its own contract, and names every
+   * store — the empty ones loudly.
+   * @param {{ user: string, memory: string }} texts - current profile contents.
+   * @param {number} diffChars - size of the diff that did not fit, for the explanation.
+   * @returns {string} a self-contained block that replaces the frozen profile in full.
+   */
+  const snapshotBlock = (texts, diffChars) => {
+    const parts = [
+      '=== MEMORY UPDATE — FULL REPLACEMENT (this session) ===',
+      'This is the COMPLETE current profile, not a diff. It replaces the frozen profile '
+      + 'block above in full: any line of that block not repeated here was deleted or '
+      + 'rewritten this session. Do not carry such a line forward, and do not offer to '
+      + 'restore it from the frozen block — the user removed it on purpose.',
+      `(the diff ran to ${diffChars} chars, over the ${config.deltaCharLimit}-char cap, so the whole profile is restated instead)`,
+    ];
+    for (const target of TARGETS) {
+      const body = texts[target];
+      const pct = Math.min(100, Math.round((body.length / limits[target]) * 100));
+      parts.push(body
+        ? `\n=== ${LABELS[target]} [${pct}% — ${body.length}/${limits[target]} chars] ===\n${body}`
+        : `\n=== ${LABELS[target]} [empty — 0/${limits[target]} chars] ===\n(nothing is saved in this store any more — whatever the frozen block says about it is gone)`);
+    }
+    return safe(parts.join('\n'));
+  };
+
   // ---- per-session frozen baseline + append-only delta (hybrid) ----
   const baselines = new Map();
   /**
@@ -257,13 +290,9 @@ export function apply(ctx, config) {
     if (body.length <= config.deltaCharLimit) return safe([...header, body].join('\n'));
     // A whole-store rewrite touches nearly every line, so the diff is both huge and
     // useless as a diff. Pointing at `memory read` would cost the same text plus a
-    // round trip, so send the current profile instead — it is budget-bounded anyway.
-    return safe([
-      ...header,
-      `(the diff is ${body.length} chars, over the ${config.deltaCharLimit}-char cap, `
-        + 'so this is the current full profile rather than a diff)',
-      sectionsFrom(now),
-    ].join('\n'));
+    // round trip, so restate the profile under its own header — it is budget-bounded
+    // anyway, and only the snapshot can say honestly what is no longer there.
+    return snapshotBlock(now, body.length);
   };
 
   if (mode === 'section' || mode === 'hybrid') {

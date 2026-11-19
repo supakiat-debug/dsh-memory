@@ -1,6 +1,6 @@
 {
   "name": "dsh-memory",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "private": true,
   "description": "Budgeted user memory for DeepSeek Harness: USER.md / MEMORY.md injected as a session-frozen system-prompt block plus an append-only MEMORY UPDATE snapshot, so edits stop busting the prefix cache.",
   "license": "MIT",

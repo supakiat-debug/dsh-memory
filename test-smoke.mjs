@@ -114,16 +114,34 @@ assert.ok(headB.includes('ไม่ใช้ตาราง') && headB.includes(
 assert.notEqual(headB, head0, 'per-session baselines differ');
 assert.equal(h.snap(B), '', 'the new session has no delta of its own');
 
-// ---- oversized delta falls back to the current full profile ----
+// ---- oversized delta falls back to a full replacement ----
+// The bug this guards: the fallback sent the whole profile under the DELTA header,
+// whose promise is "every other line of that block is still current" — the exact
+// opposite of what a full profile means.
 const big = harness({ deltaCharLimit: 60 });
 big.seed('user', '- alpha\n');
 big.head();
 await big.tools.memory.execute({ target: 'user', action: 'add', content: 'bravo charlie delta echo foxtrot golf hotel' });
 const bigSnap = big.snap();
-assert.ok(bigSnap.includes('rather than a diff'), 'oversized delta admits the diff was dropped');
-assert.ok(!bigSnap.includes('memory read'), 'oversized delta no longer sends the model off to read');
-assert.ok(bigSnap.includes('=== USER PROFILE') && bigSnap.includes('bravo charlie'), 'oversized delta carries the current profile');
-assert.ok(!bigSnap.includes('AGENT NOTES'), 'empty stores are not sectioned');
+assert.ok(bigSnap.includes('FULL REPLACEMENT'), 'a restated profile declares itself a replacement');
+assert.ok(!bigSnap.includes('every other line'), 'and never repeats the delta promise');
+assert.ok(bigSnap.includes('restated instead'), 'it says out loud that the diff was dropped');
+assert.ok(!bigSnap.includes('memory read'), 'a snapshot no longer sends the model off to read');
+assert.ok(bigSnap.includes('=== USER PROFILE') && bigSnap.includes('bravo charlie'), 'the current profile is carried in full');
+assert.ok(/AGENT NOTES \[empty/.test(bigSnap) && bigSnap.includes('nothing is saved in this store'), 'an empty store is named as empty instead of going invisible');
+
+// ---- clearing a store must not read as "everything else is still current" ----
+const wiped = harness({ deltaCharLimit: 60 });
+wiped.seed('user', '- ก\n- ข\n- ค\n- ง\n- จ\n- ฉ\n- ช\n- ซ\n');
+wiped.seed('memory', '- โน้ตหนึ่ง\n- โน้ตสอง\n');
+wiped.head();
+wiped.seed('user', '');
+wiped.seed('memory', '');
+const wipeSnap = wiped.snap();
+assert.ok(wipeSnap.includes('FULL REPLACEMENT'), 'a wipe travels as a full replacement');
+assert.ok(/USER PROFILE \[empty/.test(wipeSnap) && /AGENT NOTES \[empty/.test(wipeSnap), 'both stores are reported as empty');
+assert.ok(!wipeSnap.includes('- ก') && !wipeSnap.includes('โน้ตหนึ่ง'), 'deleted lines appear nowhere — nothing to resurrect');
+assert.ok(wipeSnap.includes('on purpose'), 'and the model is told not to offer to restore them');
 
 // ---- legacy behaviours still enforced ----
 const r = await mem({ target: 'memory', action: 'add', content: 'เครื่อง Windows 11, workspace C:\\Users\\Supk' });

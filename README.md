@@ -67,8 +67,11 @@ Notes:
 - Snapshots are grouped per store and per direction: `[USER PROFILE — added this session]`,
   `[AGENT NOTES — no longer current]`. Only lines that actually moved are listed.
 - If a session's total delta exceeds `deltaCharLimit` — a whole-store `rewrite` does that on its own —
-  the snapshot carries the current full profile instead of a diff. A rewrite-sized diff is noise, and
-  pointing the model at `memory read` would cost the same text plus a round trip.
+  the snapshot stops being a diff and restates the **complete current profile** under its own
+  `FULL REPLACEMENT` header. A rewrite-sized diff is noise, and pointing the model at `memory read`
+  would cost the same text plus a round trip. Because a restated profile means *what is not here is
+  gone*, it says so — and it names every store, empty ones included (`[empty — 0/N chars]`), which is
+  what makes a cleared store read as a cleared store instead of as "nothing changed".
 - `injectProfile: false` still works and is an alias for `off`.
 - Learned text is never treated as a prompt template: the section registers with
   `interpolate: false` and every rendered block has `{{` broken apart, so a bullet containing

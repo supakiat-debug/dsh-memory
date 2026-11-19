@@ -4,6 +4,21 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.1] - 2026-11-12
+
+### Fixed
+
+- The oversized-delta fallback no longer travels under the delta header. It sent the whole current
+  profile while still promising "every other line of that block is still current" — the precise
+  opposite of what a full profile means, because a full profile is what survives and everything not
+  restated is gone. Cleared stores were the damaging case: `sectionsFrom` skips empty stores, so
+  wiping `USER.md` produced a snapshot that reported the deleted profile as intact, and the model
+  kept acting on — and offering to restore — memories the user had just removed.
+- A restated profile now declares itself `=== MEMORY UPDATE — FULL REPLACEMENT (this session) ===`,
+  states that it replaces the frozen block in full, tells the model not to carry unlisted lines
+  forward, and names **every** store: an empty one reads `[empty — 0/N chars]` followed by "nothing
+  is saved in this store any more", which is the difference between a wipe and a typo.
+
 ## [0.3.0] - 2026-11-12
 
 ### Changed
